@@ -88,7 +88,6 @@ def index():
                     'abusive': dataTags['abusive'],
                     'emotions': dataTags['emotions']
                 }
-                print(data)
                 db_ref.document().set(data)
                 print(f"Saved {saveCount} succesfully")
                 saveCount += 1
