@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, request, redirect, jsonify, json
 import requests
+import datetime
 from datetime import datetime
 from bs4 import BeautifulSoup as bs
 from urllib.request import Request, urlopen as uOpen
@@ -7,6 +8,7 @@ from bson.json_util import dumps
 import os
 from firebase_admin import credentials, firestore, initialize_app
 from flask_cors import CORS
+from covid_diaries_nlp import CovidDiariesNLP
 
 app = Flask(__name__)
 CORS(app)
@@ -17,13 +19,13 @@ try:
     default_app = initialize_app(cred)
     db = firestore.client()
     db_ref = db.collection('stories')
-    print("Successful connection")
+    print("Successful DataBase connection")
 except Exception as e:
     print(f"An Error Occured: {e}")
 
 
 # adding story(using scheduler)
-@app.route('/add', methods=['POST', 'GET'])
+@app.route('/toi', methods=['POST', 'GET'])
 def index():
     searchString = 'my-covid-story'   # can have list of keywords
     # searchString = request.json['content']   #if we want to search custom string via front end
@@ -65,16 +67,28 @@ def index():
                 content = content.replace(garbage, "")
                 date = singleNewsPageHtml.find('div', {"class": "as_byline"})
                 Fdate = date.find('div', attrs={'dateval': True})
-                dateTime = Fdate['dateval']
+                rawDate = Fdate['dateval']
+                cleanDate = rawDate[8:].replace(
+                    "IST", "").replace(",", "").strip()
+                stdDate = datetime.strptime(
+                    cleanDate, '%b %d %Y %H:%M')
+                title = heading.replace('"', "").replace("\n", "")
+                content = content.replace('"', "").replace("\n", "")
+                cvnlp = CovidDiariesNLP()
+                dataTags = cvnlp.getNLPInfo(text=content)
 
                 data = {
-                    'title': heading.replace('"', "").replace("\n", ""),
-                    'content': content.replace('"', "").replace("\n", ""),
+                    'title': title,
+                    'content': content,
                     'link': link,
                     'source': "TIMESOFINDIA",
-                    'dateTime': dateTime[8:]
+                    'dateTime': stdDate,
+                    'keywords': dataTags['keywords'],
+                    'cities': dataTags['cities'],
+                    'abusive': dataTags['abusive'],
+                    'emotions': dataTags['emotions']
                 }
-
+                print(data)
                 db_ref.document().set(data)
                 print(f"Saved {saveCount} succesfully")
                 saveCount += 1
@@ -84,11 +98,21 @@ def index():
 
 
 # Return all stories
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST'])
 def read():
+    if request.method == 'POST':
+        order = request.json['sortByDate']
+    else:
+        order = 'newest'
     try:
-        allStory = [doc.to_dict() for doc in db_ref.stream()]
-        return jsonify(allStory), 200
+        allStory = [doc.to_dict()
+                    for doc in db_ref.order_by('dateTime').stream()]
+        if order == 'newest':
+            resStory = allStory[::-1]
+        else:
+            resStory = allStory
+
+        return jsonify(resStory), 200
 
     except Exception as e:
         return f"An Error Occured: {e}"
