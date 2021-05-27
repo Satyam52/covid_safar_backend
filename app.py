@@ -23,7 +23,7 @@ app = Flask(__name__)
 
 CORS(app)
 # app.config['CORS_HEADERS'] = 'Content-Type'
-app.config["SECRET_KEY"] = f'INSECURE_DEV_SECRET_KEY_REPLACE_STATICALLY_IN_PROD_'.join(
+app.config["SECRET_KEY"] = 'INSECURE_DEV_SECRET_KEY_REPLACE_STATICALLY_IN_PROD_'.join(
     random.choices(string.ascii_uppercase + string.digits, k=10))
 
 
@@ -250,7 +250,8 @@ def getStory():
     if searchString:
         regex = re.compile(searchString, re.IGNORECASE)
         if coverage == 'global':
-            query = {'language': lang, "$or": [{"content": {"$regex": regex}}, {"title": {"$regex": regex}}]}
+            query = {'language': lang, "$or": [
+                {"content": {"$regex": regex}}, {"title": {"$regex": regex}}]}
         else:
             query = {'coverage': coverage,
                      'language': lang, "$or": [{"content": {"$regex": regex}}, {"title": {"$regex": regex}}]}
