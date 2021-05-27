@@ -1,11 +1,10 @@
-import pke
 import json
-import requests
-import text2emotion as te
-from profanity_check import predict, predict_prob
-from flashtext import KeywordProcessor
 from collections import Counter
 
+import pke
+import text2emotion as te
+from flashtext import KeywordProcessor
+from profanity_check import predict_prob
 
 # Prepare keyword processor to extract cities list
 cities_list = []
