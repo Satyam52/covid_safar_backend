@@ -23,7 +23,7 @@ app = Flask(__name__)
 
 CORS(app)
 # app.config['CORS_HEADERS'] = 'Content-Type'
-app.config["SECRET_KEY"] = 'INSECURE_DEV_SECRET_KEY_REPLACE_STATICALLY_IN_PROD_'.join(
+app.config["SECRET_KEY"] = 'INSECURE_DEV_SECRET_KEYS_REPLACE_STATICALLY_IN_PROD_'.join(
     random.choices(string.ascii_uppercase + string.digits, k=10))
 
 
