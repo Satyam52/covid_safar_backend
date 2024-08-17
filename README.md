@@ -8,3 +8,5 @@
 3. `cd into this directory`
 4. `pip install -r requirments.txt`
 5. `python main.py`
+
+![alt text](https://raw.githubusercontent.com/Satyam52/covid-safar/main/safar.png)
